@@ -9,8 +9,12 @@ metadata:
     component: "{{ .Release.Name }}-{{ .Values.Master.Component }}"
 spec:
   ports:
-    - port: {{ .Values.Master.ServicePort }}
+    - name: internal
+      port: {{ .Values.Master.ServicePort }}
       targetPort: {{ .Values.Master.ContainerPort }}
+    - name: http
+      port: {{ .Values.Master.ServiceHttpPort }}
+      targetPort: {{ .Values.Master.ContainerHttpPort }}
   selector:
     component: "{{ .Release.Name }}-{{ .Values.Master.Component }}"
 ---
@@ -45,7 +49,7 @@ spec:
           args: ["echo $(hostname -i) {{ template "master-fullname" . }} >> /etc/hosts; {{ .Values.Spark.Path }}/bin/spark-class org.apache.spark.deploy.master.Master"]
           ports:
             - containerPort: {{ .Values.Master.ContainerPort }}
-            - containerPort: {{ .Values.WebUi.ContainerPort }}
+            - containerPort: {{ .Values.Master.ContainerHttpPort }}
           resources:
             requests:
               cpu: "{{ .Values.Master.Cpu }}"
@@ -58,4 +62,4 @@ spec:
           - name: SPARK_MASTER_PORT
             value: {{ .Values.Master.ServicePort | quote }}
           - name: SPARK_MASTER_WEBUI_PORT
-            value: {{ .Values.WebUi.ContainerPort | quote }}
+            value: {{ .Values.Master.ServiceHttpPort | quote }}

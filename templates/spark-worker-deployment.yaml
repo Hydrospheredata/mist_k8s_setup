@@ -38,4 +38,4 @@ spec:
           - name: SPARK_WORKER_MEMORY
             value: {{ default "1g" .Values.Worker.ExecutorMemory | quote }}
           - name: SPARK_WORKER_WEBUI_PORT
-            value: {{ .Values.WebUi.ContainerPort | quote }}
+            value: "4040"

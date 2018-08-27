@@ -15,12 +15,12 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "webui-fullname" -}}
-{{- $name := default .Chart.Name .Values.WebUi.Name -}}
+{{- define "worker-fullname" -}}
+{{- $name := default .Chart.Name .Values.Worker.Name -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "worker-fullname" -}}
-{{- $name := default .Chart.Name .Values.Worker.Name -}}
+{{- define "mist-fullname" -}}
+{{- $name := default .Chart.Name .Values.Mist.Name -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

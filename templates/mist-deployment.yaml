@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "mist-fullname" . }}
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.Mist.ServiceHttpPort }}
+      targetPort: {{ .Values.Mist.ContainerHttpPort }}
+    - name: akka
+      port: {{ .Values.Mist.ServiceAkkaPort }}
+      targetPort: {{ .Values.Mist.ContainerAkkaPort }}
+    - name: logs
+      port: {{ .Values.Mist.ServiceLogsPort }}
+      targetPort: {{ .Values.Mist.ContainerLogsPort }}
+  selector:
+    component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "mist-fullname" . }}
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
+spec:
+  replicas: {{ default 1 .Values.Master.Replicas }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
+  template:
+    metadata:
+      labels:
+        heritage: {{ .Release.Service | quote }}
+        release: {{ .Release.Name | quote }}
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
+    spec:
+      containers:
+        - name: {{ template "mist-fullname" . }}
+          image: "{{ .Values.Mist.Image }}:{{ .Values.Mist.ImageTag }}"
+          ports:
+            - containerPort: {{ .Values.Mist.ContainerAkkaPort }}
+            - containerPort: {{ .Values.Mist.ContainerHttpPort }}
+            - containerPort: {{ .Values.Mist.ContainerLogsPort }}
+          resources:
+            requests:
+              cpu: "{{ .Values.Mist.Cpu }}"
+              memory: "{{ .Values.Mist.Memory }}"
