@@ -164,12 +164,8 @@ metadata:
 data:
   default.conf: |-
     mist {
-        workers {
-        runner = "manual"
-        manual {
-          startCmd = "python /usr/share/mist/runner/start.py"
-          stopCmd = "bash /usr/share/mist/runner/stop.sh"
-        }
+      context-defaults {
+        max-conn-failures = 1
       }
     }
 ---
