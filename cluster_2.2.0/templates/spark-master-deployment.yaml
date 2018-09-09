@@ -49,7 +49,7 @@ spec:
         - name: {{ template "master-fullname" . }}
           image: "{{ .Values.Master.Image }}:{{ .Values.Master.ImageTag }}"
           command: ["/bin/sh","-c"]
-          args: ["echo $(hostname -i) {{ template "master-fullname" . }} >> /etc/hosts; {{ .Values.Spark.Path }}/bin/spark-class org.apache.spark.deploy.master.Master"]
+          args: ["echo $(hostname -i) {{ template "master-fullname" . }} >> /etc/hosts; {{ .Values.Spark.Path }}/bin/spark-class org.apache.spark.deploy.master.Master -h {{ template "master-fullname" . }}"]
           ports:
             - containerPort: {{ .Values.Master.ContainerPort }}
             - containerPort: {{ .Values.Master.ContainerHttpPort }}
