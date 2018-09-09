@@ -11,17 +11,7 @@ RUN curl -o /usr/share/spark.tar.gz https://archive.apache.org/dist/spark/spark-
   
 ENV SPARK_HOME /usr/share/spark
 
-#RUN curl -o /usr/share/mist.tar.gz http://repo.hydrosphere.io/hydrosphere/static/mist-1.0.0-RC16.tar.gz \
-#    && cd /usr/share \
-#    && tar xvfz mist.tar.gz \
-#    && rm -f /usr/share/mist.tar.gz \
-#    && mv mist-1.0.0-RC16 mist
-
-COPY mist-1.0.0-RC17.tar.gz /usr/share/mist-1.0.0-RC17.tar.gz
-RUN  cd /usr/share \
-    && tar xvfz mist-1.0.0-RC17.tar.gz \
-    && rm -f /usr/share/mist-1.0.0-RC17.tar.gz \
-    && mv mist-1.0.0-RC17 mist
+COPY mist/target/mist-1.0.0-RC17 /usr/share/mist
 
 CMD /usr/share/mist/bin/mist-master start --debug true
 
