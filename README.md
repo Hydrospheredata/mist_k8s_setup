@@ -1,6 +1,7 @@
 Example setup for running Mist + Spark Standalone 2.2.0 on Kubernetes .
 
-`cluster_2.2.0`: `deployMode=cluster`
+### Cluster_2.2.0
+`deployMode=cluster`
 ```sh
 cd cluster_2.2.0
 helm install --name mistk8s --namespace mist .
@@ -15,7 +16,8 @@ sbt package
 mist-cli apply -f conf
 ```
 
-`client_2.2.0`: `deployMode=client`, worker runner create pods for spark-driver application
+### Client_2.2.0
+deployMode=client`, worker runner create pods for spark-driver application
 ```sh
 
 # configure rbac
