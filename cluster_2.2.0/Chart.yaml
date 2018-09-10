@@ -1,4 +1,4 @@
-name: mist-spark2.2.0
+name: mist-spark-k8s-cluster
 version: 0.0.1
 appVersion: v1
 maintainers:

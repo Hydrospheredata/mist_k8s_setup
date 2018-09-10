@@ -3,11 +3,11 @@ FROM anapsix/alpine-java:8
 RUN apk update
 RUN apk add python curl coreutils jq
 
-RUN curl -o /usr/share/spark.tar.gz https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz \
+RUN curl -o /usr/share/spark.tar.gz https://archive.apache.org/dist/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz \
    && cd /usr/share \
    && tar xvfz spark.tar.gz \
    && rm -f /usr/share/spark.tar.gz \
-   && mv spark-2.3.0-bin-hadoop2.7 spark
+   && mv spark-2.2.0-bin-hadoop2.7 spark
   
 ENV SPARK_HOME /usr/share/spark
 

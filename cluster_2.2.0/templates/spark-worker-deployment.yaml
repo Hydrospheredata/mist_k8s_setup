@@ -58,3 +58,4 @@ spec:
             value: {{ default "1g" .Values.Worker.ExecutorMemory | quote }}
           - name: SPARK_WORKER_WEBUI_PORT
             value: "4040"
+      imagePullPolicy: Always

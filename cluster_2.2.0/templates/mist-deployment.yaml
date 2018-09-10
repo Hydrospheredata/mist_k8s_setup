@@ -79,6 +79,7 @@ spec:
               name: mist-config
         - name: "mist-kubectl-sidecar"
           image: "tommyvn/kubectl-proxy:latest"
+      imagePullPolicy: Always
       volumes:
         - name: mist-config
           configMap:

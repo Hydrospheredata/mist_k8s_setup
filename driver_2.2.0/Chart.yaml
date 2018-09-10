@@ -1,6 +1,6 @@
-name: mist-spark
+name: mist-spark-k8s-driver
 version: 0.0.1
-appVersion: 1.5.1
+appVersion: v1
 maintainers:
   - name: dos65
     email: qtankle@gmail.com

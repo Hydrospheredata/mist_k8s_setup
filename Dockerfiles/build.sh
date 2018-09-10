@@ -6,6 +6,7 @@ if [ ! -d $SRC_DIR ]; then
   git clone git@github.com:Hydrospheredata/mist.git mist
   cd mist
   sbt basicStage
+  cd ..
 fi
 
 ORG=$1

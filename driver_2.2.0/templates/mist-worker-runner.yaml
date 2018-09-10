@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mist-runners 
+data:
+  start.py: |-
+    #!/usr/bin/python
+    import os
+    import subprocess
+    import json
+    import urllib2
+
+    def from_env():
+        return StartData( 
+          os.getenv('MIST_MASTER_ADDRESS'),
+          os.getenv('MIST_WORKER_NAME'),
+          os.getenv('MIST_WORKER_RUN_OPTIONS', ''),
+          os.getenv('MIST_WORKER_SPARK_CONF', '')
+        )
+
+    def read_k8s_data():
+        return {
+          "namespace": "{{ .Release.Namespace }}",
+          "image": "{{ .Values.Mist.Image }}:{{ .Values.Mist.ImageTag }}"
+        }
+
+    class StartData:
+
+        def __init__(self, master_addr, name, run_opts, spark_conf):
+            self.master_addr = master_addr
+            self.name = name
+            self.run_opts = run_opts
+            self.spark_conf = spark_conf
+            print(self.run_opts)
+
+        def __opts_list(self):
+            parts = self.run_opts.split(' ')
+            result = []
+            for x in parts:
+                stripped = x.strip()
+                if (stripped != ''):
+                    result.append(stripped)
+            return result
+
+        def __confs_list(self):
+            if self.spark_conf != '':
+                parts = self.spark_conf.split('|+|')
+                result = []
+                for x in parts:
+                    result.append('--conf')
+                    result.append(x)
+                return result
+            else:
+                return []
+
+        def to_spark_submit(self, spark_home, mist_home):
+            submit = [os.path.join(spark_home, 'bin', 'spark-submit')]
+            conf = self.__confs_list() + ["--conf", "spark.driver.port=3448", "--conf", "spark.blockManager.port=3449"]
+            args = ['--class', 'io.hydrosphere.mist.worker.Worker', os.path.join(mist_home, 'mist-worker.jar'), '--master', self.master_addr, '--name', self.name]
+            return submit + self.__opts_list() + conf + args
+
+    def clean_name(n):
+        return n.replace("_", "-")
+
+    def mk_service(namespace, name):
+      return {
+        "apiversion": "v1",
+        "kind": "Service",
+        "metadata":{
+           "namespace": namespace,
+           "name": clean_name(name),
+           "labels": {
+              "component": clean_name(name)
+           }
+        },
+        "spec": {
+          "ports": [
+            {"name": "driver", "port": 3448, "targetPort": 3448},
+            {"name": "blocks", "port": 3449, "targetPort": 3449}
+          ],
+          "selector": {
+             "component": clean_name(name)
+          }
+        }
+      }
+
+
+    def mk_deployment(namespace, image, data):
+        cmd = "echo $(hostname -i) " + clean_name(data.name) + " >> /etc/hosts; " + " ".join(data.to_spark_submit("/usr/share/spark", "/usr/share/mist"))
+        return {
+          "apiVersion": "extensions/v1beta1",
+          "kind": "Deployment",
+          "metadata": {
+            "namespace": namespace,
+            "name": clean_name(data.name), 
+            "labels": {
+               "component": clean_name(data.name)
+            }
+          },
+          "spec": {
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                 "component": clean_name(data.name)
+               }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                   "component": clean_name(data.name)
+                }
+              },
+              "spec": {
+                "containers": [{
+                  "name": clean_name(data.name),
+                  "image": image,
+                  "command": ["/bin/sh", "-c"],
+                  "args": [cmd],
+                  "ports": [
+                    { "containerPort": 3448 },
+                    { "containerPort": 3449 }
+                  ]
+                }]
+              }
+            }
+          }
+        }
+    
+    def post(body, url):
+        data = json.dumps(body)
+        req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+        f = urllib2.urlopen(req)
+        resp = f.read()
+        f.close()
+        return resp
+
+    spark_home = os.getenv("SPARK_HOME", "/usr/share/spark")
+    mist_home = os.getenv("MIST_HOME", "/usr/share/mist")
+    start_data = from_env()
+    k8s_data = read_k8s_data()
+
+    deployment = mk_deployment(k8s_data['namespace'], k8s_data['image'], start_data)
+    srv = mk_service(k8s_data['namespace'], start_data.name)
+    print(deployment)
+    print(srv)
+
+    dep_url = "http://localhost:8001/apis/extensions/v1beta1/namespaces/"+ k8s_data['namespace'] + "/deployments"
+    post(deployment, dep_url)
+
+
+    srv_url = "http://localhost:8001/api/v1/namespaces/"+ k8s_data['namespace'] + "/services"
+    post(srv, srv_url)
+
+  stop.sh: |-
+    #!/usr/bin/env bash
+    namespace=`echo ${MIST_WORKER_NAME} | tr -s '_' '-' | cut -c1-62`
+    curl -L -H "Content-Type: application/json" -k -X DELETE -D - -d '{"propagationPolicy": "Foreground"}' http://localhost:8001/apis/extensions/v1beta1/namespaces/{{ .Release.Namespace }}/deployments/${namespace}
