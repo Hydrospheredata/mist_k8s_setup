@@ -1,4 +1,4 @@
-name: mist-spark-k8s-driver
+name: mist-spark-k8s-client
 version: 0.0.1
 appVersion: v1
 maintainers:

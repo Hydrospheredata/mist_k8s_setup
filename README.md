@@ -15,7 +15,7 @@ sbt package
 mist-cli apply -f conf
 ```
 
-`driver_2.2.0`: `deployMode=client`, worker runner create pods for spark-driver application
+`client_2.2.0`: `deployMode=client`, worker runner create pods for spark-driver application
 ```sh
 
 # configure rbac
