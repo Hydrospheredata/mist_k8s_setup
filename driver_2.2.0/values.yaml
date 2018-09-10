@@ -9,7 +9,7 @@ Spark:
 Master:
   Name: master
   Image: "dos65/mist-k8s"
-  ImageTag: "latest"
+  ImageTag: "1.0.0"
   Replicas: 1
   Component: "spark-master"
   Cpu: "100m"
@@ -18,13 +18,15 @@ Master:
   ContainerPort: 7077
   ServiceHttpPort: 8080
   ContainerHttpPort: 8080
+  ServiceHttpApiPort: 6066
+  ContainerHttpApiPort: 6066
   ServiceType: LoadBalancer
 
 Worker:
   Name: worker
   Image: "dos65/mist-k8s"
-  ImageTag: "latest"
-  Replicas: 1
+  ImageTag: "1.0.0"
+  Replicas: 2
   Component: "spark-worker"
   Cpu: "100m"
   Memory: "512Mi"
@@ -38,7 +40,7 @@ Worker:
 Mist:
   Name: "mist"
   Image: "dos65/mist-k8s"
-  ImageTag: "latest"
+  ImageTag: "1.0.0"
   Replicas: 1
   Component: "mist-server"
   Cpu: "100m"

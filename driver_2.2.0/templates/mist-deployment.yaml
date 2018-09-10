@@ -8,6 +8,13 @@ data:
       context-defaults {
         max-conn-failures = 1
       }
+      workers {
+        runner = "manual"
+        manual {
+          startCmd = "/usr/share/mist/runner/start.py"
+          stopCmd = "/usr/share/mist/runner/stop.sh"
+        }
+      }
     }
 ---
 apiVersion: v1
@@ -57,11 +64,12 @@ spec:
         chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
         component: "{{ .Release.Name }}-{{ .Values.Mist.Component }}"
     spec:
+      serviceAccountName: mist
       containers:
         - name: {{ template "mist-fullname" . }}
           image: "{{ .Values.Mist.Image }}:{{ .Values.Mist.ImageTag }}"
           command: ["/bin/sh","-c"]
-          args: ["echo $(hostname -i) {{ template "mist-fullname" . }} >> /etc/hosts; /usr/share/mist/bin/mist-master start --debug true"]
+          args: ["/usr/share/mist/runner/init_proxy.sh; echo $(hostname -i) {{ template "mist-fullname" . }} >> /etc/hosts; /usr/share/mist/bin/mist-master start --debug true"]
           env:
           - name: MIST_OPTS
             value: "-Dmist.networking.public-host={{ template "mist-fullname" . }}"
@@ -79,8 +87,6 @@ spec:
               name: mist-config
             - mountPath: /usr/share/mist/runner
               name: mist-runners
-        - name: "mist-kubectl-sidecar"
-          image: "tommyvn/kubectl-proxy:latest"
       volumes:
         - name: mist-config
           configMap:

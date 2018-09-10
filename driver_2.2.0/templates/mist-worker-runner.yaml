@@ -3,6 +3,11 @@ kind: ConfigMap
 metadata:
   name: mist-runners 
 data:
+  init_proxy.sh: |-
+    #!/bin/sh
+    curl https://storage.googleapis.com/kubernetes-release/release/v1.9.3/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+    chmod +x /usr/local/bin/kubectl
+    /usr/local/bin/kubectl proxy $1>/dev/null $2>dev/null &
   start.py: |-
     #!/usr/bin/python
     import os
@@ -55,9 +60,8 @@ data:
 
         def to_spark_submit(self, spark_home, mist_home):
             submit = [os.path.join(spark_home, 'bin', 'spark-submit')]
-            conf = self.__confs_list() + ["--conf", "spark.driver.port=3448", "--conf", "spark.blockManager.port=3449"]
             args = ['--class', 'io.hydrosphere.mist.worker.Worker', os.path.join(mist_home, 'mist-worker.jar'), '--master', self.master_addr, '--name', self.name]
-            return submit + self.__opts_list() + conf + args
+            return submit + self.__opts_list() + self.__confs_list() + args
 
     def clean_name(n):
         return n.replace("_", "-")
@@ -74,10 +78,8 @@ data:
            }
         },
         "spec": {
-          "ports": [
-            {"name": "driver", "port": 3448, "targetPort": 3448},
-            {"name": "blocks", "port": 3449, "targetPort": 3449}
-          ],
+          "clusterIp": None,
+          "ports": [],
           "selector": {
              "component": clean_name(name)
           }
@@ -115,11 +117,7 @@ data:
                   "name": clean_name(data.name),
                   "image": image,
                   "command": ["/bin/sh", "-c"],
-                  "args": [cmd],
-                  "ports": [
-                    { "containerPort": 3448 },
-                    { "containerPort": 3449 }
-                  ]
+                  "args": [cmd]
                 }]
               }
             }
@@ -145,10 +143,11 @@ data:
     print(srv)
 
     dep_url = "http://localhost:8001/apis/extensions/v1beta1/namespaces/"+ k8s_data['namespace'] + "/deployments"
+    print(dep_url)
     post(deployment, dep_url)
 
-
     srv_url = "http://localhost:8001/api/v1/namespaces/"+ k8s_data['namespace'] + "/services"
+    print(srv_url)
     post(srv, srv_url)
 
   stop.sh: |-
